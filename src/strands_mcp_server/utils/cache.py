@@ -31,12 +31,18 @@ def load_links_only() -> None:
 
     for src in doc_config.llm_texts_url:
         for title, url in doc_fetcher.parse_llms_txt(src):
+            # The llms.txt may use slugs (e.g. "agent-loop") as link text;
+            # convert to a readable title via title_from_url which handles
+            # slug-to-title conversion (hyphens/underscores → spaces + title case).
+            if not title or title == title.lower():
+                display_title = text_processor.title_from_url(url)
+            else:
+                display_title = text_processor.normalize(title)
+
             # Record curated display title and placeholder cache
-            _URL_TITLES[url] = title
+            _URL_TITLES[url] = display_title
             _URL_CACHE.setdefault(url, None)
 
-            # For curated titles from llms.txt, we already have the title
-            display_title = text_processor.normalize(title)
             index_title = text_processor.index_title_variants(display_title, url)
 
             # Index now with clean display title + hidden index variants; empty content for now
